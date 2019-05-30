@@ -32,21 +32,26 @@ print(ny)
 print(nz)
 print(nt)
 
-u = ncid.variables['u'][nt-1,3*nz/4,:,:]
-v = ncid.variables['v'][nt-1,3*nz/4,:,:]
-w = ncid.variables['w'][nt-1,3*nz/4,:,:]
+u = ncid.variables['u'][nt-2,nz/2,:,:]
+v = ncid.variables['v'][nt-2,nz/2,:,:]
+w = ncid.variables['w'][nt-2,nz/2,:,:]
 
-u = u - sum(u)/nx/ny
-v = v - sum(u)/nx/ny
-w = w - sum(u)/nx/ny
+for j in range(ny) :
+  u[j,:] = u[j,:] - sum(u[j,:])/nx
+  v[j,:] = v[j,:] - sum(v[j,:])/nx
+  w[j,:] = w[j,:] - sum(w[j,:])/nx
+
+print( np.amax(u) )
+print( np.amax(v) )
+print( np.amax(w) )
 
 ke = (u*u+v*v+w*w)/2
 
-#Compute a z-average of the x-direction FFTs 
+#Compute a y-average of the x-direction FFTs 
 sp = np.fft.rfft(ke[0,:])[0:int(nx/2)]
 sp[:] = 0
-for k in range(ke.shape[0]) :
-    sp = sp + np.fft.rfft(ke[k,:])[0:int(nx/2)]
+for j in range(ke.shape[1]) :
+    sp = sp + np.fft.rfft(ke[j,:])[0:int(nx/2)] / ke.shape[1];
 spd = sp
 for i in range(sp.shape[0]) :
     spd[i] = np.real(sp[i])*np.real(sp[i]) + np.imag(sp[i])*np.imag(sp[i])
@@ -58,8 +63,23 @@ wn = np.array([0. for i in range(spd.shape[0])])
 for i in range(int(nx/2)) :
     wn[i] = 2*np.pi*n_value[i]/ncid.variables['x'][nx-1]
 
-plt.loglog(wn,running_mean(spd,3))
+spd.dump('spd.npy')
+wn.dump('wn.npy')
+
+slope = 1e-1*np.power(wn,-5./3.)
+
+plt.loglog(wn,spd)
+plt.loglog(wn,slope)
 plt.xlabel('Wavenumber')
 plt.ylabel('Kinetic Energy Spectral Power Density')
-plt.savefig('collision_ke_spectra.eps', bbox_inches='tight')
-plt.close()
+wn6dx = 2*np.pi/(6*20000./nx)
+wn4dx = 2*np.pi/(4*20000./nx)
+wn2dx = 2*np.pi/(2*20000./nx)
+plt.axvline(x=wn2dx,linestyle="--")
+plt.axvline(x=wn4dx,linestyle="--")
+# plt.axvline(x=wn6dx,linestyle="--")
+plt.show()
+
+
+# plt.savefig('collision_ke_spectra.eps', bbox_inches='tight')
+# plt.close()
