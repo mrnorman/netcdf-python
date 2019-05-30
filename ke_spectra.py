@@ -32,9 +32,23 @@ print(ny)
 print(nz)
 print(nt)
 
-u = ncid.variables['u'][nt-2,nz/2,:,:]
-v = ncid.variables['v'][nt-2,nz/2,:,:]
-w = ncid.variables['w'][nt-2,nz/2,:,:]
+u = ncid.variables['u'][nt-1,nz/2,:,:]
+v = ncid.variables['v'][nt-1,nz/2,:,:]
+w = ncid.variables['w'][nt-1,nz/2,:,:]
+theta = ncid.variables['theta'][nt-1,nz/2,:,:]
+
+plt.contourf(x,y,theta)
+plt.colorbar()
+plt.show()
+
+plt.contourf(x,y,w)
+plt.colorbar()
+plt.show()
+
+plt.contourf(x,y,u)
+plt.colorbar()
+plt.show()
+
 
 for j in range(ny) :
   u[j,:] = u[j,:] - sum(u[j,:])/nx
@@ -66,17 +80,18 @@ for i in range(int(nx/2)) :
 spd.dump('spd.npy')
 wn.dump('wn.npy')
 
-slope = 1e-1*np.power(wn,-5./3.)
+slope = 1e0*np.power(wn,-5./3.)
 
-plt.loglog(wn,spd)
-plt.loglog(wn,slope)
+plt.loglog(wn,spd,color="black",label="KE Spectra")
+plt.loglog(wn,slope,color="red",label="k^(-5/3)")
 plt.xlabel('Wavenumber')
 plt.ylabel('Kinetic Energy Spectral Power Density')
 wn6dx = 2*np.pi/(6*20000./nx)
 wn4dx = 2*np.pi/(4*20000./nx)
 wn2dx = 2*np.pi/(2*20000./nx)
-plt.axvline(x=wn2dx,linestyle="--")
-plt.axvline(x=wn4dx,linestyle="--")
+plt.axvline(x=wn2dx,linestyle="--",color="blue",label="2dx")
+plt.axvline(x=wn4dx,linestyle="--",color="green",label="4dx")
+plt.legend()
 # plt.axvline(x=wn6dx,linestyle="--")
 plt.show()
 
